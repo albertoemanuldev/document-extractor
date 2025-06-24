@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FileText, Trash2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ const ConversationList = ({
     return (
       <div className="p-4 text-center">
         <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-        <p className="text-sm text-gray-500">Nenhuma conversa ainda</p>
+        <p className="text-sm text-gray-500">Nenhum Documento ainda</p>
         <p className="text-xs text-gray-400">Carregue um PDF para começar</p>
       </div>
     );

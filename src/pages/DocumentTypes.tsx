@@ -74,6 +74,7 @@ const tiposMock = [
 const DocumentTypes: React.FC = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [openForm, setOpenForm] = useState(false);
+  const [editingTipo, setEditingTipo] = useState<any | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const navigate = useNavigate();
   const { tipos, setTipos } = useTiposDocumento();
@@ -87,16 +88,37 @@ const DocumentTypes: React.FC = () => {
   });
 
   function onSubmit(data: any) {
-    const novoTipo = {
-      id: tipos.length > 0 ? Math.max(...tipos.map(t => t.id)) + 1 : 1,
-      nome: data.nome,
-      descricao: data.descricao,
-      prompt: data.prompt,
-      camposSaida: data.camposSaida,
-    };
-    setTipos([...tipos, novoTipo]);
+    if (editingTipo) {
+      // Editar tipo existente
+      const tiposAtualizados = tipos.map(t =>
+        t.id === editingTipo.id ? { ...t, ...data } : t
+      );
+      setTipos(tiposAtualizados);
+      setEditingTipo(null);
+    } else {
+      // Adicionar novo tipo
+      const novoTipo = {
+        id: tipos.length > 0 ? Math.max(...tipos.map(t => t.id)) + 1 : 1,
+        nome: data.nome,
+        descricao: data.descricao,
+        prompt: data.prompt,
+        camposSaida: data.camposSaida,
+      };
+      setTipos([...tipos, novoTipo]);
+    }
     setOpenForm(false);
     form.reset();
+  }
+
+  function handleEdit(tipo: any) {
+    setEditingTipo(tipo);
+    form.reset({
+      nome: tipo.nome,
+      descricao: tipo.descricao,
+      prompt: tipo.prompt,
+      camposSaida: tipo.camposSaida,
+    });
+    setOpenForm(true);
   }
 
   function handleDelete(id: number) {
@@ -111,14 +133,26 @@ const DocumentTypes: React.FC = () => {
           <Button variant="outline" onClick={() => navigate("/")}> <ArrowLeft className="w-4 h-4 mr-1" /> Voltar</Button>
           <h1 className="text-3xl font-bold">Tipos de Documentos</h1>
         </div>
-        <Dialog open={openForm} onOpenChange={setOpenForm}>
+        <Dialog open={openForm} onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setEditingTipo(null);
+            form.reset();
+          }
+          setOpenForm(isOpen);
+        }}>
           <DialogTrigger asChild>
-            <Button onClick={() => setOpenForm(true)}>+ Adicionar Novo Tipo</Button>
+            <Button onClick={() => {
+              form.reset(); // Limpa o formulário para um novo cadastro
+              setEditingTipo(null);
+              setOpenForm(true);
+            }}>+ Adicionar Novo Tipo</Button>
           </DialogTrigger>
           <DialogContent className="max-w-xl">
             <DialogHeader>
-              <DialogTitle>Cadastrar Novo Tipo de Documento</DialogTitle>
-              <DialogDescription>Preencha os campos abaixo para adicionar um novo tipo de documento.</DialogDescription>
+              <DialogTitle>{editingTipo ? "Editar Tipo de Documento" : "Cadastrar Novo Tipo de Documento"}</DialogTitle>
+              <DialogDescription>
+                {editingTipo ? "Atualize os campos abaixo para editar o tipo de documento." : "Preencha os campos abaixo para adicionar um novo tipo de documento."}
+              </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -177,30 +211,27 @@ const DocumentTypes: React.FC = () => {
               <CardTitle>{tipo.nome}</CardTitle>
               <CardDescription>{tipo.descricao}</CardDescription>
             </CardHeader>
-            {tipo.prompt && (
-              <CardContent>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm">Ver Prompt</Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Prompt de Extração - {tipo.nome}</DialogTitle>
-                      <DialogDescription>
-                        Este é o prompt utilizado para extração automática dos dados deste tipo de documento.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <pre className="bg-gray-100 rounded-lg p-4 text-sm overflow-x-auto whitespace-pre-wrap font-mono text-gray-800 max-h-96">
-                      {tipo.prompt}
-                    </pre>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            )}
             <CardFooter className="justify-between gap-2">
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm">Preview</Button>
-                <Button variant="link" size="sm">Editar</Button>
+                {tipo.prompt && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="link" size="sm">Preview</Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Prompt de Extração - {tipo.nome}</DialogTitle>
+                        <DialogDescription>
+                          Este é o prompt utilizado para extração automática dos dados deste tipo de documento.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <pre className="bg-gray-100 rounded-lg p-4 text-sm overflow-x-auto whitespace-pre-wrap font-mono text-gray-800 max-h-96">
+                        {tipo.prompt}
+                      </pre>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                <Button variant="link" size="sm" onClick={() => handleEdit(tipo)}>Editar</Button>
               </div>
               <Button variant="destructive" size="icon" title="Excluir" onClick={() => setDeleteId(tipo.id)}>
                 <Trash2 className="w-4 h-4" />

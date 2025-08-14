@@ -72,7 +72,7 @@ export default function AppSidebar({
           className="w-full flex items-center space-x-2 px-4 py-3 bg-[#0A2540] text-white rounded-full shadow-none font-semibold text-base mb-3"
         >
           <Plus className="w-5 h-5" />
-          <span>Nova Conversa</span>
+          <span>Novo Documento</span>
         </Button>
         <Link to="/document-types" className="w-full">
           <Button
